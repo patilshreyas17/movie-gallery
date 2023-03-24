@@ -11,7 +11,7 @@ async function getApiData(endpoint) {
     console.log(`${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`);
   
     const response = await fetch(
-      `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`
+      `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US&limit=5`
     );
   
     const data = await response.json();
