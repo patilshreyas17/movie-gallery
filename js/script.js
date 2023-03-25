@@ -8,10 +8,10 @@ async function getApiData(endpoint) {
     const API_KEY = '25ea83730615c0ac81169f2f44f96ccc';
     const API_URL = 'https://api.themoviedb.org/3/';
 
-    console.log(`${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`);
+
   
     const response = await fetch(
-      `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US&limit=5`
+      `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`
     );
   
     const data = await response.json();
@@ -222,7 +222,7 @@ async function displayMovieDetails() {
         <i class="fas fa-star text-primary"></i>
         ${show.vote_average.toFixed(1)} / 10
       </p>
-      <p class="text-muted">Release Date: ${show.release_date}</p>
+      <p class="text-muted">Last air Date: ${show.last_air_date}</p>
       <p>
         ${show.overview}
       </p>
@@ -236,13 +236,13 @@ async function displayMovieDetails() {
     </div>
   </div>
   <div class="details-bottom">
-    <h2>show Info</h2>
+    <h2>Show Info</h2>
     <ul>
-      <li><span class="text-secondary">Budget:</span> $${
-        show.budget
+      <li><span class="text-secondary">No of Episodes:</span> ${
+        show.number_of_episodes
       }</li>
-      <li><span class="text-secondary">Revenue:</span> $${
-        show.revenue
+      <li><span class="text-secondary">Last episode to air:</span> ${
+        show.last_episode_to_air.name
       }</li>
       <li><span class="text-secondary">Runtime:</span> ${
         show.runtime
@@ -260,8 +260,59 @@ async function displayMovieDetails() {
   
     document.querySelector('#show-details').appendChild(div);
   }
+function swiper(){
+    const swiper = new Swiper('.swiper',{
+      slidesPerView : 1,
+      spaceBetween:30,
+      freeMode:true,
+      loop:true,
+      autoplay :{
+        delay:4000,
+        disableOnInteraction:false
+      },
+      breakpoints:{
+        500:{
+          slidesPerView:2
+        },
+        700:{
+          slidesPerView:3
+        },
+        1200:{
+          slidesPerView:4
+        }
+      }
+    })
+  }
+  
 
+async function displaySlider(){
+  /*<div class="swiper-slide">
+    <a href="movie-details.html?id=1">
+      <img src="./images/no-image.jpg" alt="Movie Title" />
+    </a>
+    <h4 class="swiper-rating">
+      <i class="fas fa-star text-secondary"></i> 8 / 10
+    </h4>
+  </div>*/
+  const {results} = await getApiData(`movie/now_playing`)
+  results.forEach((result)=>{
+    const div = document.createElement('div')
+    div.classList.add('swiper-slide')
+    div.innerHTML=`
+  
+      <a href="movie-details.html?id=${result.id}">
+        <img src="https://image.tmdb.org/t/p/w500${result.poster_path}" alt="${result.title}" />
+      </a>
+      <h4 class="swiper-rating">
+        <i class="fas fa-star text-secondary"></i> ${result.vote_average} / 10
+      </h4>
+          
+    `
+    document.querySelector('.swiper-wrapper').appendChild(div)
+    swiper()
+  })
 
+}
 
 function init(){
     switch(global.currentPage){
@@ -269,6 +320,7 @@ function init(){
         case '/index.html':
             console.log('Home');
             displayPopMovies()
+            displaySlider()
             break
         case '/shows.html':
             console.log("shows")
@@ -283,8 +335,8 @@ function init(){
             console.log("search")
             break
         case '/tv-details.html':
+          console.log("tv-details")
             displayShowDetails()
-            console.log("tv-details")
             break
 
     }
