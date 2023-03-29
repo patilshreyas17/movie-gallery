@@ -1,6 +1,17 @@
-const global={
-    currentPage:window.location.pathname
-}
+const global = {
+  currentPage: window.location.pathname,
+  search: {
+    term: '',
+    type: '',
+    page: 1,
+    totalPages: 1,
+    totalResults:0
+  },
+  api: {
+    apiKey: '25ea83730615c0ac81169f2f44f96ccc',
+    apiUrl: 'https://api.themoviedb.org/3/',
+  },
+};
 
 async function getApiData(endpoint) {
     // Register your key at https://www.themoviedb.org/settings/api and enter here
@@ -314,6 +325,133 @@ async function displaySlider(){
 
 }
 
+
+  async function search() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+  
+    global.search.type = urlParams.get('type');
+    global.search.term = urlParams.get('search-term');
+  
+    if (global.search.term !== '' && global.search.term !== null) {
+      const {results,total_pages,page,total_results} = await searchAPIData();
+      global.search.page=page
+      global.search.totalPages=total_pages
+      global.search.totalResults=total_results
+
+      if(results.length===0){
+        showAlert("Nores found","error")
+        return
+      }
+      else{
+        displaSearchResults(results)
+        document.querySelector("#search-term").value=''
+      }
+    } else {
+      showAlert('Please enter a search term',"error");
+    }
+  }
+  
+function displaSearchResults(results){
+  document.querySelector("#search-results").innerHTML=``
+  document.querySelector("#search-results-heading").innerHTML=``
+  document.querySelector("#pagination").innerHTML=``
+  results.forEach((movie) => {
+    const div = document.createElement('div');
+    div.classList.add('card');
+    div.innerHTML = `
+          <a href="${global.search.type}-details.html?id=${movie.id}">
+            ${
+              movie.poster_path
+                ? `<img
+              src="https://image.tmdb.org/t/p/w500/${movie.poster_path}"
+              class="card-img-top"
+              alt="${global.search.type==="movie"? movie.title:movie.name}"
+            />`
+                : `<img
+            src="../images/no-image.jpg"
+            class="card-img-top"
+            alt="${global.search.type==="movie"? movie.title:movie.name}"
+          />`
+            }
+          </a>
+          <div class="card-body">
+            <h5 class="card-title">${global.search.type==="movie"? movie.title:movie.name}</h5>
+            <p class="card-text">
+              <small class="text-muted">Release: ${global.search.type==="movie"? movie.release_date:movie.first_air_date}</small>
+            </p>
+          </div>
+        `;
+    document.querySelector('#search-results-heading').innerHTML=`
+    <h2>${results.length} of ${global.search.totalResults} for ${global.search.term}</h2>`
+    document.querySelector('#search-results').appendChild(div);
+  })
+  displayPagination()
+
+
+}
+
+function displayPagination(){
+  const div = document.createElement("div")
+  div.classList.add("pagination")
+  div.innerHTML=`
+  <button class="btn btn-primary" id="prev">Prev</button>
+  <button class="btn btn-primary" id="next">Next</button>
+  <div class="page-counter">Page ${global.search.page} of ${global.search.totalPages} </div>
+  `
+  document.querySelector("#pagination").appendChild(div)
+  if (global.search.page === 1) {
+    document.querySelector('#prev').disabled = true;
+  }
+
+
+  if (global.search.page === global.search.totalPages) {
+    document.querySelector('#next').disabled = true;
+  }
+
+  document.querySelector('#next').addEventListener('click', async () => {
+    global.search.page++;
+    const { results, total_pages } = await searchAPIData();
+    displaSearchResults(results);
+  });
+
+
+  document.querySelector('#prev').addEventListener('click', async () => {
+    global.search.page--;
+    const { results, total_pages } = await searchAPIData();
+    displaSearchResults(results);
+  })
+}
+
+
+  async function searchAPIData() {
+    const API_KEY = global.api.apiKey;
+    const API_URL = global.api.apiUrl;
+  
+;
+  
+    const response = await fetch(
+      `${API_URL}search/${global.search.type}?api_key=${API_KEY}&language=en-US&query=${global.search.term}&page=${global.search.page}`
+    );
+  
+    const data = await response.json();
+  
+
+  
+    return data;
+  }
+  
+
+  function showAlert(message, className) {
+    const alertEl = document.createElement('div');
+    alertEl.classList.add('alert', className);
+    alertEl.appendChild(document.createTextNode(message));
+    document.querySelector('#alert').appendChild(alertEl);
+  
+    setTimeout(() => alertEl.remove(), 3000);
+  }
+  
+
 function init(){
     switch(global.currentPage){
         case '/':
@@ -332,6 +470,7 @@ function init(){
             displayMovieDetails()
             break
         case '/search.html':
+          search()
             console.log("search")
             break
         case '/tv-details.html':
